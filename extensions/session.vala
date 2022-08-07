@@ -205,43 +205,16 @@ namespace Tabby {
             return statement.exec ();
         }
 
-        //  public async bool restore_windows (Midori.Browser default_browser) throws Midori.DatabaseError {
-        //      bool restored = false;
-
-        //      // Restore existing session(s) that weren't closed, or the last closed one
-        //      foreach (var item in yield query (null, int64.MAX - 1)) {
-        //          Midori.Browser browser;
-        //          int64 id = item.get_data<int64> ("session_id");
-        //          if (!restored) {
-        //              browser = default_browser;
-        //              restored = true;
-        //              connect_browser (browser, id);
-        //              foreach (var widget in browser.tabs.get_children ()) {
-        //                  yield tab_added (widget as Midori.Tab, id);
-        //              }
-        //          } else {
-        //              var app = (Midori.App)default_browser.get_application ();
-        //              browser = browser_for_session (app, id);
-        //          }
-        //          var tab = new Midori.Tab (null, browser.web_context,
-        //                                    item.uri, item.title);
-        //          tab.pinned = item.get_data<bool> ("pinned");
-        //          connect_tab (tab, item);
-        //          browser.add (tab);
-        //      }
-        //      return restored;
-        //  }
-
-        //  Midori.Browser browser_for_session (Midori.App app, int64 id) {
-        //      var browser = browsers.lookup (id.to_string ());
-        //      if (browser == null) {
-        //          debug ("Restoring session %s", id.to_string ());
-        //          browser = new Midori.Browser (app);
-        //          browser.show ();
-        //          connect_browser (browser, id);
-        //      }
-        //      return browser;
-        //  }
+        Midori.Browser browser_for_session (Midori.App app, int64 id) {
+            var browser = browsers.lookup (id.to_string ());
+            if (browser == null) {
+                debug ("Restoring session %s", id.to_string ());
+                browser = new Midori.Browser (app);
+                browser.show ();
+                connect_browser (browser, id);
+            }
+            return browser;
+        }
 
         public void connect_browser (Midori.Browser browser, int64 id=-1) {
             if (id < 0) {
@@ -301,8 +274,6 @@ namespace Tabby {
     public class Session : Peas.ExtensionBase, Midori.BrowserActivatable {
         public Midori.Browser browser { owned get; set; }
 
-        //  static bool session_restored = false;
-
         public void activate () {
             // Don't track locked (app) or private windows
             if (browser.is_locked || browser.web_context.is_ephemeral ()) {
@@ -314,18 +285,12 @@ namespace Tabby {
             }
 
             browser.default_tab.connect (restore_or_connect);
-            //  try {
-            //      var session = SessionDatabase.get_default ();
-            //      if (session_restored) {
-            //          session.connect_browser (browser);
-            //          browser.activate_action ("tab-new", null);
-            //      } else {
-            //          session_restored = true;
-            //          restore_session.begin (session);
-            //      }
-            //  } catch (Midori.DatabaseError error) {
-            //      critical ("Failed to restore session: %s", error.message);
-            //  }
+            try {
+                var session = SessionDatabase.get_default ();
+                restore_session.begin (session);
+            } catch (Midori.DatabaseError error) {
+                critical ("Failed to restore session: %s", error.message);
+            }
         }
 
         bool restore_or_connect () {
@@ -347,17 +312,14 @@ namespace Tabby {
             return false;
         }
 
-        //  async void restore_session (SessionDatabase session) {
-        //      try {
-        //          bool restored = yield session.restore_windows (browser);
-        //          if (!restored) {
-        //              browser.add (new Midori.Tab (null, browser.web_context));
-        //              session.connect_browser (browser);
-        //          }
-        //      } catch (Midori.DatabaseError error) {
-        //          critical ("Failed to restore session: %s", error.message);
-        //      }
-        //  }
+        async void restore_session (SessionDatabase session) {
+            try {
+                browser.add (new Midori.Tab (null, browser.web_context));
+                session.connect_browser (browser);
+            } catch (Midori.DatabaseError error) {
+                critical ("Failed to restore session: %s", error.message);
+            }
+        }
     }
 
     public class Preferences : Object, Midori.PreferencesActivatable {

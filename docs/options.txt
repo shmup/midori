@@ -1,0 +1,27 @@
+Usage:
+  midori [OPTION…]
+
+Help Options:
+  -h, --help                         Show help options
+  --help-all                         Show all help options
+  --help-gapplication                Show GApplication options
+  --help-gtk                         Show GTK+ Options
+
+GApplication options
+  --gapplication-service             Enter GApplication service mode (use from D-Bus service files)
+
+GTK+ Options
+  --class=CLASS                      Program class as used by the window manager
+  --name=NAME                        Program name as used by the window manager
+  --gtk-module=MODULES               Load additional GTK+ modules
+  --g-fatal-warnings                 Make all warnings fatal
+
+Application Options:
+  -a, --app=ADDRESS                  Run ADDRESS as a web application
+  -e, --execute                      Execute the specified command
+  --help-execute                     List available commands to execute with -e/ --execute
+  -i, --inactivity-reset=SECONDS     Reset Midori after SECONDS seconds of inactivity
+  -p, --private                      Private browsing, no changes are saved
+  -V, --version                      Display version number
+  --display=DISPLAY                  X display to use
+
